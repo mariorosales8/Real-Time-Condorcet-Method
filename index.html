@@ -211,7 +211,8 @@
     const SUPABASE_URL = 'https://mrlracnknvhvxpgumkzn.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_0GKO2lN7KJb6PRioZkQoJg_RvokuU3z';
     
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    // Declarado como supabaseClient para evitar conflictos globales
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     // ==========================================
     // LOCAL STATE & USER
@@ -241,8 +242,8 @@
     async function pullAndMergeData() {
         setSyncStatus('loading');
         try {
-            // Note that we are selecting 'data' from the new 'assemblies' table
-            const { data, error } = await supabase.from('assemblies').select('data').eq('id', 1).single();
+            // Corregido a supabaseClient
+            const { data, error } = await supabaseClient.from('assemblies').select('data').eq('id', 1).single();
             
             if (error) throw error;
             if (data && data.data) {
@@ -283,8 +284,8 @@
             // Download and merge first to avoid overwriting recent votes
             await pullAndMergeData(); 
             
-            // Push the master version to the new 'assemblies' table
-            const { error } = await supabase.from('assemblies').update({ data: discussions }).eq('id', 1);
+            // Corregido a supabaseClient
+            const { error } = await supabaseClient.from('assemblies').update({ data: discussions }).eq('id', 1);
             if (error) throw error;
             
             setSyncStatus('ok');
@@ -331,7 +332,7 @@
         
         localStorage.setItem('condorcet_data_en', JSON.stringify(discussions));
         renderDiscussions();
-        await pushDataToCloud(); // Sync after creation
+        await pushDataToCloud(); 
     }
 
     function renderDiscussions() {
@@ -368,7 +369,7 @@
         
         localStorage.setItem('condorcet_data_en', JSON.stringify(discussions));
         renderDiscussionDetail();
-        await pushDataToCloud(); // Sync after adding proposal
+        await pushDataToCloud(); 
     }
 
     async function submitVote() {
@@ -389,7 +390,7 @@
         localStorage.setItem('condorcet_data_en', JSON.stringify(discussions));
         renderDiscussionDetail();
         
-        await pushDataToCloud(); // Sync after voting
+        await pushDataToCloud(); 
     }
 
     function renderDiscussionDetail() {
