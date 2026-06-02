@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Global Direct Assembly (Supabase)</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --bg: #f8fafc;
+            --text: #1e293b;
+            --border: #e2e8f0;
+            --winner-bg: #dcfce7;
+            --winner-text: #166534;
+            --paradox-bg: #fef08a;
+            --paradox-text: #854d0e;
+        }
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.5;
+        }
+        h1, h2, h3 { color: #0f172a; margin-top: 0; }
+        .card {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: opacity 0.2s;
+        }
+        button:hover { opacity: 0.9; }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-secondary { background: #64748b; }
+        
+        input[type="text"], input[type="number"] {
+            padding: 8px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        input[type="text"] { width: 100%; margin-bottom: 10px; }
+        input[type="number"] { width: 60px; text-align: center; }
+        
+        .proposal-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 10px;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .default-rank-box {
+            margin-top: 15px; 
+            padding: 15px; 
+            background: #f1f5f9; 
+            border-radius: 6px; 
+            border: 1px dashed #94a3b8; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
+        }
+
+        .status-banner {
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+        .status-winner { background: var(--winner-bg); color: var(--winner-text); border: 1px solid #bbf7d0; }
+        .status-paradox { background: var(--paradox-bg); color: var(--paradox-text); border: 1px solid #fde047; }
+        .hidden { display: none !important; }
+        
+        .header-meta { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 20px; 
+            font-size: 0.85em; 
+            color: #64748b; 
+            background: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+        
+        #sync-status { font-weight: bold; }
+        .sync-ok { color: #16a34a; }
+        .sync-loading { color: #d97706; }
+        .sync-error { color: #dc2626; }
+
+        .grid-layout { display: grid; gap: 20px; }
+        @media (min-width: 800px) {
+            .grid-layout { grid-template-columns: 1fr 1.2fr; }
+        }
+
+        .leaderboard-item {
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            margin-bottom: 8px;
+            background: white;
+            overflow: hidden;
+        }
+        .leaderboard-header {
+            padding: 12px 15px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #ffffff;
+            transition: background 0.2s;
+        }
+        .leaderboard-header:hover { background: #f1f5f9; }
+        
+        .badge-container { display: flex; gap: 5px; align-items: center; margin-right: 10px; }
+        .score-badge { background: #0f172a; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.8em; font-weight: bold; }
+        .win-badge { background: #16a34a; color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.75em; }
+
+        .matchup-details { padding: 15px; background: #f8fafc; border-top: 1px solid var(--border); }
+        .matchup-table { width: 100%; border-collapse: collapse; font-size: 0.85em; background: white; }
+        .matchup-table th, .matchup-table td { border: 1px solid var(--border); padding: 8px; text-align: center; }
+        .matchup-table th { background: #e2e8f0; color: #334155; }
+        .matchup-table td:first-child { text-align: left; font-weight: 500; }
+        .res-win { color: #166534; font-weight: bold; background: #dcfce7; }
+        .res-loss { color: #991b1b; background: #fee2e2; }
+        .res-tie { color: #64748b; background: #f1f5f9; }
+    </style>
+</head>
+<body>
+
+    <h1>Condorcet Assembly</h1>
+    <div class="header-meta">
+        <div id="user-id-display"></div>
+        <div id="sync-indicator">Status: <span id="sync-status" class="sync-loading">Connecting to cloud...</span></div>
+    </div>
+
+    <div id="view-discussions">
+        <div class="card">
+            <h2>Open New Discussion</h2>
+            <input type="text" id="new-discussion-title" placeholder="e.g., What should we do with the remaining budget?">
+            <button onclick="createDiscussion()" id="btn-create">Create Discussion</button>
+        </div>
+        
+        <h2>Active Discussions</h2>
+        <div id="discussions-list"></div>
+    </div>
+
+    <div id="view-discussion-detail" class="hidden">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <button onclick="goBack()" class="btn-secondary">&larr; Back to List</button>
+            <button onclick="forceSync()" class="btn-secondary">🔄 Refresh Data</button>
+        </div>
+        
+        <h2 id="discussion-title" style="margin-bottom: 20px;">Discussion Title</h2>
+
+        <div class="grid-layout">
+            <div>
+                <div class="card">
+                    <h3>Your Voting Ballot</h3>
+                    <p style="font-size: 0.85em; color: #64748b; margin-bottom: 15px;">
+                        Assign numbers to rank your preferences (1 = favorite). <strong>You can repeat numbers to tie proposals.</strong>
+                    </p>
+                    
+                    <div id="proposals-list"></div>
+                    
+                    <div class="default-rank-box">
+                        <div>
+                            <strong style="font-size: 0.9em; color: #334155;">Default Rank</strong><br>
+                            <span style="font-size: 0.8em; color: #64748b;">Number assigned to blank or future options.</span>
+                        </div>
+                        <input type="number" min="1" id="default-rank-input" placeholder="Last">
+                    </div>
+
+                    <button onclick="submitVote()" style="margin-top: 20px; width: 100%;" id="btn-vote">Save / Cast Vote</button>
+                </div>
+
+                <div class="card">
+                    <h3>Add New Proposal</h3>
+                    <input type="text" id="new-proposal-text" placeholder="e.g., Invest 50% in parks">
+                    <button onclick="addProposal()" id="btn-add">Add Proposal</button>
+                </div>
+            </div>
+
+            <div class="card" style="margin-bottom: 0;">
+                <h3 style="margin-bottom: 15px;">Results and Consensus</h3>
+                <div id="condorcet-status"></div>
+                <div id="leaderboard-section"></div>
+            </div>
+        </div>
+    </div>
+
+<script>
+    // ==========================================
+    // SUPABASE CONFIGURATION (Paste your credentials here!)
+    // ==========================================
+    const SUPABASE_URL = 'https://mrlracnknvhvxpgumkzn.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_0GKO2lN7KJb6PRioZkQoJg_RvokuU3z';
+    
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    // ==========================================
+    // LOCAL STATE & USER
+    // ==========================================
+    if (!localStorage.getItem('condorcet_user_id')) {
+        localStorage.setItem('condorcet_user_id', 'Voter_' + Math.random().toString(36).substr(2, 5));
+    }
+    const currentUser = localStorage.getItem('condorcet_user_id');
+    document.getElementById('user-id-display').innerText = "Your ID: " + currentUser;
+
+    let discussions = [];
+    if (localStorage.getItem('condorcet_data_en')) {
+        discussions = JSON.parse(localStorage.getItem('condorcet_data_en'));
+    }
+    let currentDiscussionId = null;
+
+    // ==========================================
+    // CLOUD LOGIC (PULL, MERGE & PUSH)
+    // ==========================================
+    function setSyncStatus(status) {
+        const el = document.getElementById('sync-status');
+        if(status === 'loading') { el.className = 'sync-loading'; el.innerText = 'Syncing...'; }
+        if(status === 'ok') { el.className = 'sync-ok'; el.innerText = 'Updated'; }
+        if(status === 'error') { el.className = 'sync-error'; el.innerText = 'Connection error'; }
+    }
+
+    async function pullAndMergeData() {
+        setSyncStatus('loading');
+        try {
+            // Note that we are selecting 'data' from the new 'assemblies' table
+            const { data, error } = await supabase.from('assemblies').select('data').eq('id', 1).single();
+            
+            if (error) throw error;
+            if (data && data.data) {
+                const cloudDiscussions = data.data;
+                
+                // P2P MERGE LOGIC
+                cloudDiscussions.forEach(cloudDisc => {
+                    let localDisc = discussions.find(d => d.id === cloudDisc.id);
+                    if (!localDisc) {
+                        discussions.push(cloudDisc);
+                    } else {
+                        // Merge proposals
+                        cloudDisc.proposals.forEach(cloudProp => {
+                            if (!localDisc.proposals.find(p => p.id === cloudProp.id)) {
+                                localDisc.proposals.push(cloudProp);
+                            }
+                        });
+                        // Merge ballots
+                        localDisc.ballots = { ...localDisc.ballots, ...cloudDisc.ballots };
+                    }
+                });
+
+                // Save locally and refresh UI
+                localStorage.setItem('condorcet_data_en', JSON.stringify(discussions));
+                renderDiscussions();
+                if(currentDiscussionId) renderDiscussionDetail();
+            }
+            setSyncStatus('ok');
+        } catch (e) {
+            console.error(e);
+            setSyncStatus('error');
+        }
+    }
+
+    async function pushDataToCloud() {
+        setSyncStatus('loading');
+        try {
+            // Download and merge first to avoid overwriting recent votes
+            await pullAndMergeData(); 
+            
+            // Push the master version to the new 'assemblies' table
+            const { error } = await supabase.from('assemblies').update({ data: discussions }).eq('id', 1);
+            if (error) throw error;
+            
+            setSyncStatus('ok');
+        } catch (e) {
+            console.error(e);
+            setSyncStatus('error');
+            alert("Could not save to the cloud. Check your connection or Supabase configuration.");
+        }
+    }
+
+    async function forceSync() {
+        await pullAndMergeData();
+    }
+
+    // Initialize sync on page load
+    window.onload = () => { pullAndMergeData(); };
+
+    // ==========================================
+    // USER INTERFACE
+    // ==========================================
+    function showView(viewId) {
+        document.getElementById('view-discussions').classList.add('hidden');
+        document.getElementById('view-discussion-detail').classList.add('hidden');
+        document.getElementById(viewId).classList.remove('hidden');
+    }
+
+    function goBack() {
+        currentDiscussionId = null;
+        renderDiscussions();
+        showView('view-discussions');
+    }
+
+    function toggleDetails(propId) {
+        document.getElementById('details-' + propId).classList.toggle('hidden');
+    }
+
+    async function createDiscussion() {
+        const titleInput = document.getElementById('new-discussion-title');
+        const title = titleInput.value.trim();
+        if (!title) return alert("Enter a title.");
+
+        discussions.push({ id: 'disc_' + Date.now(), title: title, proposals: [], ballots: {} });
+        titleInput.value = '';
+        
+        localStorage.setItem('condorcet_data_en', JSON.stringify(discussions));
+        renderDiscussions();
+        await pushDataToCloud(); // Sync after creation
+    }
+
+    function renderDiscussions() {
+        const list = document.getElementById('discussions-list');
+        list.innerHTML = '';
+        if(discussions.length === 0) return list.innerHTML = '<p style="color:#64748b;">No active discussions yet.</p>';
+
+        discussions.forEach(disc => {
+            const div = document.createElement('div');
+            div.className = 'card';
+            div.innerHTML = `
+                <h3>${disc.title}</h3>
+                <p style="font-size:0.9em; color:#64748b;">Proposals: ${disc.proposals.length} | Votes cast: ${Object.keys(disc.ballots).length}</p>
+                <button onclick="openDiscussion('${disc.id}')">Enter Assembly</button>
+            `;
+            list.appendChild(div);
+        });
+    }
+
+    function openDiscussion(id) {
+        currentDiscussionId = id;
+        renderDiscussionDetail();
+        showView('view-discussion-detail');
+    }
+
+    async function addProposal() {
+        const textInput = document.getElementById('new-proposal-text');
+        const text = textInput.value.trim();
+        if (!text) return;
+
+        const disc = discussions.find(d => d.id === currentDiscussionId);
+        disc.proposals.push({ id: 'prop_' + Date.now(), text: text });
+        textInput.value = '';
+        
+        localStorage.setItem('condorcet_data_en', JSON.stringify(discussions));
+        renderDiscussionDetail();
+        await pushDataToCloud(); // Sync after adding proposal
+    }
+
+    async function submitVote() {
+        const disc = discussions.find(d => d.id === currentDiscussionId);
+        const inputs = document.querySelectorAll('.vote-input');
+        
+        let userVote = { defaultRank: null, ranks: {} };
+        const defInputVal = document.getElementById('default-rank-input').value;
+        userVote.defaultRank = defInputVal === "" ? null : parseInt(defInputVal);
+
+        inputs.forEach(input => {
+            const propId = input.getAttribute('data-id');
+            const rank = input.value;
+            userVote.ranks[propId] = rank === "" ? null : parseInt(rank);
+        });
+
+        disc.ballots[currentUser] = userVote;
+        localStorage.setItem('condorcet_data_en', JSON.stringify(discussions));
+        renderDiscussionDetail();
+        
+        await pushDataToCloud(); // Sync after voting
+    }
+
+    function renderDiscussionDetail() {
+        const disc = discussions.find(d => d.id === currentDiscussionId);
+        if(!disc) return;
+        document.getElementById('discussion-title').innerText = disc.title;
+
+        const list = document.getElementById('proposals-list');
+        list.innerHTML = '';
+        
+        const myVoteData = disc.ballots[currentUser] || {};
+        const myRanks = myVoteData.ranks !== undefined ? myVoteData.ranks : myVoteData;
+        const myDefault = myVoteData.defaultRank !== undefined && myVoteData.defaultRank !== null ? myVoteData.defaultRank : '';
+
+        document.getElementById('default-rank-input').value = myDefault;
+
+        if(disc.proposals.length === 0) list.innerHTML = '<p style="color:#64748b;">No proposals yet.</p>';
+
+        disc.proposals.forEach(prop => {
+            const div = document.createElement('div');
+            div.className = 'proposal-item';
+            const prevRank = myRanks[prop.id] !== undefined && myRanks[prop.id] !== null ? myRanks[prop.id] : '';
+            div.innerHTML = `
+                <span style="font-weight: 500;">${prop.text}</span>
+                <input type="number" min="1" class="vote-input" data-id="${prop.id}" value="${prevRank}" placeholder="-">
+            `;
+            list.appendChild(div);
+        });
+
+        calculateAndRenderCondorcet(disc);
+    }
+
+    // ==========================================
+    // COPELAND / CONDORCET ALGORITHM
+    // ==========================================
+    function calculateAndRenderCondorcet(disc) {
+        const statusDiv = document.getElementById('condorcet-status');
+        const leaderBoardDiv = document.getElementById('leaderboard-section');
+        
+        if (disc.proposals.length === 0) {
+            statusDiv.innerHTML = `<div class="status-banner status-paradox" style="margin:0;">Not enough proposals to compute.</div>`;
+            return leaderBoardDiv.innerHTML = '';
+        }
+        if (Object.keys(disc.ballots).length === 0) {
+            statusDiv.innerHTML = `<div class="status-banner status-paradox" style="margin:0;">Waiting for the first vote...</div>`;
+            return leaderBoardDiv.innerHTML = '';
+        }
+
+        const proposals = disc.proposals;
+        const n = proposals.length;
+        let copelandPoints = {}; let winsCount = {}; let matchups = {};       
+
+        proposals.forEach(p => { copelandPoints[p.id] = 0; winsCount[p.id] = 0; matchups[p.id] = {}; });
+
+        for (let i = 0; i < n; i++) {
+            for (let j = i + 1; j < n; j++) {
+                let p1 = proposals[i].id; let p2 = proposals[j].id;
+                let p1Score = 0; let p2Score = 0;
+
+                Object.values(disc.ballots).forEach(voteData => {
+                    let r1, r2;
+                    if (voteData.ranks !== undefined) {
+                        r1 = (voteData.ranks[p1] !== null && voteData.ranks[p1] !== undefined) ? voteData.ranks[p1] : (voteData.defaultRank !== null ? voteData.defaultRank : Infinity);
+                        r2 = (voteData.ranks[p2] !== null && voteData.ranks[p2] !== undefined) ? voteData.ranks[p2] : (voteData.defaultRank !== null ? voteData.defaultRank : Infinity);
+                    } else {
+                        r1 = (voteData[p1] !== null && voteData[p1] !== undefined) ? voteData[p1] : Infinity;
+                        r2 = (voteData[p2] !== null && voteData[p2] !== undefined) ? voteData[p2] : Infinity;
+                    }
+
+                    if (r1 < r2) p1Score++; else if (r2 < r1) p2Score++;
+                });
+
+                matchups[p1][p2] = { myScore: p1Score, theirScore: p2Score };
+                matchups[p2][p1] = { myScore: p2Score, theirScore: p1Score };
+
+                if (p1Score > p2Score) { copelandPoints[p1] += 1; copelandPoints[p2] -= 1; winsCount[p1]++; } 
+                else if (p2Score > p1Score) { copelandPoints[p2] += 1; copelandPoints[p1] -= 1; winsCount[p2]++; }
+            }
+        }
+
+        let sortedProposals = [...proposals].sort((a, b) => copelandPoints[b.id] - copelandPoints[a.id]);
+        let highestScore = copelandPoints[sortedProposals[0].id];
+        let leaders = sortedProposals.filter(p => copelandPoints[p.id] === highestScore);
+        
+        if (leaders.length === 1) {
+            const winner = leaders[0];
+            const isPureCondorcet = winsCount[winner.id] === n - 1;
+            statusDiv.innerHTML = `<div class="status-banner status-winner">🏆 ${isPureCondorcet ? 'Absolute Consensus' : 'Current Leader (Copeland)'}:<br><span style="font-size:1.1em;">${winner.text}</span></div>`;
+        } else {
+            statusDiv.innerHTML = `<div class="status-banner status-paradox">⚠️ Technical Tie (${highestScore} pts). Add a synthesis proposal.</div>`;
+        }
+
+        let html = `<h4 style="margin-bottom: 10px; color: #334155;">1v1 Standings Table</h4>`;
+        sortedProposals.forEach(p => {
+            const pts = copelandPoints[p.id];
+            html += `
+            <div class="leaderboard-item">
+                <div class="leaderboard-header" onclick="toggleDetails('${p.id}')">
+                    <div style="display:flex; align-items:center; width: 90%;">
+                        <div class="badge-container">
+                            <span class="score-badge">${pts >= 0 ? '+' : ''}${pts} pts</span>
+                            <span class="win-badge">${winsCount[p.id]} Wins</span>
+                        </div>
+                        <span style="font-weight: 500; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">${p.text}</span>
+                    </div>
+                    <span style="color:#94a3b8; font-size: 0.8em;">▼</span>
+                </div>
+                <div id="details-${p.id}" class="matchup-details hidden">
+                    <table class="matchup-table">
+                        <thead><tr><th>vs...</th><th>For</th><th>Against</th><th>Result</th></tr></thead>
+                        <tbody>`;
+            if(n === 1) html += `<tr><td colspan="4">Add more proposals.</td></tr>`;
+            else proposals.forEach(op => {
+                if(op.id === p.id) return;
+                const m = matchups[p.id][op.id];
+                let res = m.myScore > m.theirScore ? '<td class="res-win">Won</td>' : (m.myScore < m.theirScore ? '<td class="res-loss">Lost</td>' : '<td class="res-tie">Tie</td>');
+                html += `<tr><td>${op.text}</td><td>${m.myScore}</td><td>${m.theirScore}</td>${res}</tr>`;
+            });
+            html += `</tbody></table></div></div>`;
+        });
+        leaderBoardDiv.innerHTML = html;
+    }
+
+    renderDiscussions();
+</script>
+</body>
+</html>
