@@ -373,9 +373,8 @@
     }
 
     async function submitVote() {
-        const disc = discussions.find(d => d.id === currentDiscussionId);
+        // 1. Read the inputs from the screen FIRST
         const inputs = document.querySelectorAll('.vote-input');
-        
         let userVote = { defaultRank: null, ranks: {} };
         const defInputVal = document.getElementById('default-rank-input').value;
         userVote.defaultRank = defInputVal === "" ? null : parseInt(defInputVal);
@@ -386,11 +385,28 @@
             userVote.ranks[propId] = rank === "" ? null : parseInt(rank);
         });
 
+        // 2. Download everyone else's latest data to avoid overwriting them
+        await pullAndMergeData(); 
+
+        // 3. APPLY our newly read vote onto the freshly downloaded data
+        const disc = discussions.find(d => d.id === currentDiscussionId);
         disc.ballots[currentUser] = userVote;
+        
+        // 4. Save locally and re-render
         localStorage.setItem('condorcet_data_en', JSON.stringify(discussions));
         renderDiscussionDetail();
         
-        await pushDataToCloud(); 
+        // 5. Push directly to the cloud bypassing the old push logic
+        setSyncStatus('loading');
+        try {
+            const { error } = await supabaseClient.from('assemblies').update({ data: discussions }).eq('id', 1);
+            if (error) throw error;
+            setSyncStatus('ok');
+        } catch (e) {
+            console.error(e);
+            setSyncStatus('error');
+            alert("Could not save to the cloud.");
+        }
     }
 
     function renderDiscussionDetail() {
