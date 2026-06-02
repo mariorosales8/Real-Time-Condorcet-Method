@@ -64,6 +64,11 @@
             padding: 12px 10px;
             border-bottom: 1px solid var(--border);
         }
+
+        .proposal-item span, h2, h3 {
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
         
         .default-rank-box {
             margin-top: 15px; 
@@ -152,7 +157,7 @@
     <div id="view-discussions">
         <div class="card">
             <h2>Open New Discussion</h2>
-            <input type="text" id="new-discussion-title" placeholder="e.g., What should we do with the remaining budget?">
+            <textarea id="new-discussion-title" rows="2" style="width:100%; margin-bottom:10px;" placeholder="e.g., What should we do with the remaining budget?"></textarea>
             <button onclick="createDiscussion()" id="btn-create">Create Discussion</button>
         </div>
         
@@ -191,7 +196,7 @@
 
                 <div class="card">
                     <h3>Add New Proposal</h3>
-                    <input type="text" id="new-proposal-text" placeholder="e.g., Invest 50% in parks">
+                    <textarea id="new-proposal-text" rows="2" style="width:100%; margin-bottom:10px;" placeholder="e.g., Invest 50% in parks"></textarea>
                     <button onclick="addProposal()" id="btn-add">Add Proposal</button>
                 </div>
             </div>
