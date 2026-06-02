@@ -69,6 +69,11 @@
             white-space: pre-wrap;
             word-break: break-word;
         }
+
+        .preserve-lines {
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
         
         .default-rank-box {
             margin-top: 15px; 
@@ -499,7 +504,7 @@
         if (leaders.length === 1) {
             const winner = leaders[0];
             const isPureCondorcet = winsCount[winner.id] === n - 1;
-            statusDiv.innerHTML = `<div class="status-banner status-winner">🏆 ${isPureCondorcet ? 'Absolute Consensus' : 'Current Leader (Copeland)'}:<br><span style="font-size:1.1em;">${winner.text}</span></div>`;
+            statusDiv.innerHTML = `<div class="status-banner status-winner">🏆 ${isPureCondorcet ? 'Absolute Consensus' : 'Current Leader (Copeland)'}:<br><span style="font-size:1.1em;" class="preserve-lines">${winner.text}</span></div>`;
         } else {
             statusDiv.innerHTML = `<div class="status-banner status-paradox">⚠️ Technical Tie (${highestScore} pts). Add a synthesis proposal.</div>`;
         }
@@ -515,7 +520,7 @@
                             <span class="score-badge">${pts >= 0 ? '+' : ''}${pts} pts</span>
                             <span class="win-badge">${winsCount[p.id]} Wins</span>
                         </div>
-                        <span style="font-weight: 500; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">${p.text}</span>
+                        <span style="font-weight: 500;" class="preserve-lines">${p.text}</span>
                     </div>
                     <span style="color:#94a3b8; font-size: 0.8em;">▼</span>
                 </div>
