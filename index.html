@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Global Direct Assembly (Supabase)</title>
+    <title>Real-Time Condorcet Method</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
@@ -162,7 +162,7 @@
     <div id="view-discussions">
         <div class="card">
             <h2>Open New Discussion</h2>
-            <textarea id="new-discussion-title" rows="2" style="width:100%; margin-bottom:10px;" placeholder="e.g., What should we do with the remaining budget?"></textarea>
+            <textarea id="new-discussion-title" rows="2" style="width:100%; margin-bottom:10px;" placeholder="e.g., What would you change about this page?"></textarea>
             <button onclick="createDiscussion()" id="btn-create">Create Discussion</button>
         </div>
         
@@ -201,7 +201,7 @@
 
                 <div class="card">
                     <h3>Add New Proposal</h3>
-                    <textarea id="new-proposal-text" rows="2" style="width:100%; margin-bottom:10px;" placeholder="e.g., Invest 50% in parks"></textarea>
+                    <textarea id="new-proposal-text" rows="2" style="width:100%; margin-bottom:10px;" placeholder="e.g., The colour of the table should be red when there is a tie, and yellow when there is a non-absolute winner"></textarea>
                     <button onclick="addProposal()" id="btn-add">Add Proposal</button>
                 </div>
             </div>
@@ -350,12 +350,21 @@
         list.innerHTML = '';
         if(discussions.length === 0) return list.innerHTML = '<p style="color:#64748b;">No active discussions yet.</p>';
 
-        discussions.forEach(disc => {
+        // Sort the discussions from highest to lowest number of votes
+        let sortedDiscussions = [...discussions].sort((a, b) => {
+            const votesA = Object.keys(a.ballots || {}).length;
+            const votesB = Object.keys(b.ballots || {}).length;
+            return votesB - votesA; // De mayor a menor
+        });
+
+        // Render the sorted discussions
+        sortedDiscussions.forEach(disc => {
+            const votesCount = Object.keys(disc.ballots || {}).length;
             const div = document.createElement('div');
             div.className = 'card';
             div.innerHTML = `
                 <h3>${disc.title}</h3>
-                <p style="font-size:0.9em; color:#64748b;">Proposals: ${disc.proposals.length} | Votes cast: ${Object.keys(disc.ballots).length}</p>
+                <p style="font-size:0.9em; color:#64748b;">Proposals: ${disc.proposals.length} | Votes cast: ${votesCount}</p>
                 <button onclick="openDiscussion('${disc.id}')">Enter Assembly</button>
             `;
             list.appendChild(div);
