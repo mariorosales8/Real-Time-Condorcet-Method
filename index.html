@@ -166,7 +166,7 @@
         <ul>
             <li><strong>Real-Time Participation:</strong> Anyone can introduce a new proposal at any moment.</li>
             <li><strong>Real-Time Voting:</strong> Voters can modify or update the ranking of their votes whenever they want.</li>
-            <li><strong>Real-Time Tallying:</strong> The system constantly processes votes and displays the current Condorcet winner (the option that defeats every other choice in head-to-head matchups), if one exits. If no such winner exists, the system could show the current winner or winners of a Condorcet completion method, such as the Copeland's method.</li>
+            <li><strong>Real-Time Tallying:</strong> The system constantly processes votes and displays the current <a href="https://en.wikipedia.org/wiki/Condorcet_winner" target="_blank">Condorcet winner</a> (the option that defeats every other choice in head-to-head matchups), if one exits. If no such winner exists, the system could show the current winner or winners of a Condorcet completion method, such as the <a href="https://en.wikipedia.org/wiki/Copeland%27s_method" target="_blank">Copeland's method</a>.</li>
         </ul>
 
         <h2>3. Incentives and Conflict Resolution</h2>
@@ -182,7 +182,7 @@
             <li><strong>Unstable Winner (A winner exists, but causes dissatisfaction):</strong> A segment of the population feels unrepresented by the current leader. This incentivizes them to draft and introduce a superior proposal, specifically designed to capture a broader consensus and dethrone the leader.</li>
             <li><strong>Tie/ Condorcet Paradox (No winner exists):</strong> This temporary deadlock reveals that there is a cycle in the collective preferences (e.g., A > B > C > A), meaning every tied option is defeated by something else. To break the tie, participants are incentivized to analyze the strengths of each tied option and draft a synthesized proposal that combines the best of all to achieve a clean majority.</li>
         </ul>
-    </div>   
+    </div>
 
     <div class="header-meta">
         <div id="user-id-display"></div>
@@ -416,13 +416,43 @@
         const text = textInput.value.trim();
         if (!text) return;
 
+        // 1. Download cloud data first to avoid overwriting recent updates
+        await pullAndMergeData(); 
+
+        // 2. Create the new proposal
         const disc = discussions.find(d => d.id === currentDiscussionId);
-        disc.proposals.push({ id: 'prop_' + Date.now(), text: text });
-        textInput.value = '';
+        const newPropId = 'prop_' + Date.now();
+        disc.proposals.push({ id: newPropId, text: text });
+
+        // 3. Update the current user's ballot (assign an automatic rank 1)
+        if (!disc.ballots[currentUser]) {
+            // If the user hasn't voted yet, create an empty ballot structure
+            disc.ballots[currentUser] = { defaultRank: null, ranks: {} };
+        } else if (disc.ballots[currentUser].ranks === undefined) {
+            // If it's a legacy format ballot, upgrade it smoothly
+            const oldVotes = { ...disc.ballots[currentUser] };
+            disc.ballots[currentUser] = { defaultRank: null, ranks: oldVotes };
+        }
         
+        // Auto-assign rank 1 to the newly created option
+        disc.ballots[currentUser].ranks[newPropId] = 1;
+
+        // 4. Clear input field and refresh UI
+        textInput.value = '';
         localStorage.setItem('condorcet_data_en', JSON.stringify(discussions));
         renderDiscussionDetail();
-        await pushDataToCloud(); 
+        
+        // 5. Push directly to the database
+        setSyncStatus('loading');
+        try {
+            const { error } = await supabaseClient.from('assemblies').update({ data: discussions }).eq('id', 1);
+            if (error) throw error;
+            setSyncStatus('ok');
+        } catch (e) {
+            console.error(e);
+            setSyncStatus('error');
+            alert("Could not save to the cloud.");
+        }
     }
 
     async function submitVote() {
