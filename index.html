@@ -187,6 +187,13 @@
     <div class="header-meta">
         <div id="user-id-display"></div>
         <div id="sync-indicator">Status: <span id="sync-status" class="sync-loading">Connecting to cloud...</span></div>
+        <div id="auth-section">
+            <input type="email" id="email-input" placeholder="Email">
+            <input type="password" id="password-input" placeholder="Password">
+            <button onclick="signUp()">Sign Up</button>
+            <button onclick="signIn()">Login</button>
+            <button onclick="signOut()" id="logout-btn" class="hidden">Logout</button>
+        </div>
     </div>
 
     <div id="view-discussions">
@@ -251,17 +258,43 @@
     const SUPABASE_URL = 'https://mrlracnknvhvxpgumkzn.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_0GKO2lN7KJb6PRioZkQoJg_RvokuU3z';
     
-    // Declarado como supabaseClient para evitar conflictos globales
     const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     // ==========================================
     // LOCAL STATE & USER
     // ==========================================
-    if (!localStorage.getItem('condorcet_user_id')) {
-        localStorage.setItem('condorcet_user_id', 'Voter_' + Math.random().toString(36).substr(2, 5));
+    let currentUser = null;
+    let currentSession = null;
+
+    async function initializeUser() {
+
+        const { data } = await supabaseClient.auth.getSession();
+
+        if (data.session) {
+
+            currentSession = data.session;
+            currentUser = data.session.user.id;
+
+            document.getElementById('user-id-display').innerText =
+                "Logged in as: " + data.session.user.email;
+
+            document.getElementById('logout-btn').classList.remove('hidden');
+
+        } else {
+
+            if (!localStorage.getItem('condorcet_user_id')) {
+                localStorage.setItem(
+                    'condorcet_user_id',
+                    'Voter_' + Math.random().toString(36).substr(2, 5)
+                );
+            }
+
+            currentUser = localStorage.getItem('condorcet_user_id');
+
+            document.getElementById('user-id-display').innerText =
+                "Your ID: " + currentUser;
+        }
     }
-    const currentUser = localStorage.getItem('condorcet_user_id');
-    document.getElementById('user-id-display').innerText = "Your ID: " + currentUser;
 
     let discussions = [];
     if (localStorage.getItem('condorcet_data_en')) {
@@ -277,6 +310,98 @@
         if(status === 'loading') { el.className = 'sync-loading'; el.innerText = 'Syncing...'; }
         if(status === 'ok') { el.className = 'sync-ok'; el.innerText = 'Updated'; }
         if(status === 'error') { el.className = 'sync-error'; el.innerText = 'Connection error'; }
+    }
+
+    async function signUp() {
+        const email = document.getElementById('email-input').value.trim();
+        const password = document.getElementById('password-input').value;
+
+        const { error } = await supabaseClient.auth.signUp({
+            email,
+            password
+        });
+
+        if (error) {
+            alert(error.message);
+            return;
+        }
+
+        alert("Account created.");
+    }
+
+    async function signIn() {
+        const email = document.getElementById('email-input').value.trim();
+        const password = document.getElementById('password-input').value;
+
+        const localUserId = localStorage.getItem('condorcet_user_id');
+
+        const { data, error } = await supabaseClient.auth.signInWithPassword({
+            email,
+            password
+        });
+
+        if (error) {
+            alert(error.message);
+            return;
+        }
+
+        currentSession = data.session;
+
+        await migrateAnonymousVotes(localUserId, data.user.id);
+
+        currentUser = data.user.id;
+
+        document.getElementById('user-id-display').innerText =
+            "Logged in as: " + email;
+
+        document.getElementById('logout-btn').classList.remove('hidden');
+    }
+
+    async function signOut() {
+        await supabaseClient.auth.signOut();
+
+        currentSession = null;
+
+        if (!localStorage.getItem('condorcet_user_id')) {
+            localStorage.setItem(
+                'condorcet_user_id',
+                'Voter_' + Math.random().toString(36).substr(2, 5)
+            );
+        }
+
+        currentUser = localStorage.getItem('condorcet_user_id');
+
+        document.getElementById('user-id-display').innerText =
+            "Your ID: " + currentUser;
+
+        document.getElementById('logout-btn').classList.add('hidden');
+    }
+
+    async function migrateAnonymousVotes(localUserId, authUserId) {
+        await pullAndMergeData();
+
+        discussions.forEach(disc => {
+
+            if (!disc.ballots[localUserId]) return;
+
+            disc.ballots[authUserId] = structuredClone(
+                disc.ballots[localUserId]
+            );
+
+            delete disc.ballots[localUserId];
+        });
+
+        localStorage.setItem(
+            'condorcet_data_en',
+            JSON.stringify(discussions)
+        );
+
+        localStorage.setItem(
+            'condorcet_user_id',
+            authUserId
+        );
+
+        await pushDataToCloud();
     }
 
     async function pullAndMergeData() {
@@ -341,7 +466,10 @@
     }
 
     // Initialize sync on page load
-    window.onload = () => { pullAndMergeData(); };
+    window.onload = async () => {
+        await initializeUser();
+        await pullAndMergeData();
+    };
 
     // ==========================================
     // USER INTERFACE
