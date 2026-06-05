@@ -200,7 +200,12 @@
         <div class="card">
             <h2>Open New Discussion</h2>
             <textarea id="new-discussion-title" rows="2" style="width:100%; margin-bottom:10px;" placeholder="e.g., What would you change about this page?"></textarea>
-            <button onclick="createDiscussion()" id="btn-create">Create Discussion</button>
+            <button onclick="createDiscussion(false)" id="btn-create-public">Create Public Discussion</button>
+            <button onclick="createDiscussion(true)"
+                    id="btn-create-private"
+                    style="margin-left:10px;">
+                Create Private Discussion
+            </button>
         </div>
         
         <h2>Active Discussions</h2>
@@ -465,10 +470,35 @@
         await pullAndMergeData();
     }
 
+    function openDiscussionFromUrl() {
+        const params = new URLSearchParams(
+            window.location.search
+        );
+
+        const discussionId =
+            params.get('discussion');
+
+        if (!discussionId) return;
+
+        const discussion =
+            discussions.find(
+                d => d.id === discussionId
+            );
+
+        if (!discussion) return;
+
+        currentDiscussionId = discussionId;
+
+        renderDiscussionDetail();
+
+        showView('view-discussion-detail');
+    }
+
     // Initialize sync on page load
     window.onload = async () => {
         await initializeUser();
         await pullAndMergeData();
+        openDiscussionFromUrl();
     };
 
     // ==========================================
@@ -494,12 +524,37 @@
         document.getElementById('details-' + propId).classList.toggle('hidden');
     }
 
-    async function createDiscussion() {
+    async function createDiscussion(isPrivate) {
         const titleInput = document.getElementById('new-discussion-title');
         const title = titleInput.value.trim();
         if (!title) return alert("Enter a title.");
 
-        discussions.push({ id: 'disc_' + Date.now(), title: title, proposals: [], ballots: {} });
+        const discussionId =
+            'disc_' +
+            Math.random().toString(36).substring(2) +
+            Date.now();
+
+        discussions.push({
+            id: discussionId,
+            title,
+            proposals: [],
+            ballots: {},
+            isPrivate
+        });
+
+        if (isPrivate) {
+            const url =
+                location.origin +
+                location.pathname +
+                '?discussion=' +
+                discussionId;
+
+            prompt(
+                "Private discussion link:",
+                url
+            );
+        }
+
         titleInput.value = '';
         
         localStorage.setItem('condorcet_data_en', JSON.stringify(discussions));
@@ -513,11 +568,13 @@
         if(discussions.length === 0) return list.innerHTML = '<p style="color:#64748b;">No active discussions yet.</p>';
 
         // Sort the discussions from highest to lowest number of votes
-        let sortedDiscussions = [...discussions].sort((a, b) => {
-            const votesA = Object.keys(a.ballots || {}).length;
-            const votesB = Object.keys(b.ballots || {}).length;
-            return votesB - votesA; // De mayor a menor
-        });
+        let sortedDiscussions = discussions
+            .filter(d => !d.isPrivate)
+            .sort((a, b) => {
+                const votesA = Object.keys(a.ballots || {}).length;
+                const votesB = Object.keys(b.ballots || {}).length;
+                return votesB - votesA;
+            });
 
         // Render the sorted discussions
         sortedDiscussions.forEach(disc => {
