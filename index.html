@@ -173,7 +173,7 @@
     
     <button onclick="toggleIntro()" class="btn-secondary" style="margin: 5px 0 20px;" data-i18n="btn_toggle_intro">Show / Hide Introduction</button>
 
-    <div id="intro-section" class="hidden" data-i18n="intro_full_html"></div>
+    <div id="intro-section" class="hidden"></div>
 
     <div class="header-meta">
         <div id="user-id-display"></div>
@@ -278,6 +278,18 @@
         return dict;
     }
 
+    async function loadIntro(lang) {
+        try {
+            const response = await fetch(`intro_${lang}.html`);
+            if (response.ok) {
+                const html = await response.text();
+                document.getElementById('intro-section').innerHTML = html;
+            }
+        } catch (error) {
+            console.error("Error cargando la introducción:", error);
+        }
+    }
+
     async function initTranslations() {
         try {
             const response = await fetch('translations.csv');
@@ -301,6 +313,7 @@
         currentLang = lang;
         localStorage.setItem('condorcet_lang', lang);
         applyTranslations();
+        loadIntro(lang);
     }
 
     function applyTranslations() {
@@ -482,6 +495,7 @@
 
     window.onload = async () => {
         await initTranslations();
+        loadIntro(currentLang);
         await initializeUser();
         await pullAndMergeData();
         openDiscussionFromUrl();
