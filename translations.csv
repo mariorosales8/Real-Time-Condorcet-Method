@@ -6,7 +6,7 @@ status,Status: ,Estado: ,Állapot:
 status_connecting,Connecting to cloud...,Conectando a la nube...,Csatlakozás a felhőhöz...
 status_updated,Updated,Actualizado,Frissítve
 status_error,Connection error,Error de conexión,Kapcsolódási hiba
-btn_signup,Sign Up,Registrarse,Regisztráció
+btn_signup,Sign Up,Registrarse,Regisztración
 btn_login,Login,Iniciar Sesión,Bejelentkezés
 btn_logout,Logout,Cerrar Sesión,Kijelentkezés
 placeholder_email,Email,Correo electrónico,E-mail
