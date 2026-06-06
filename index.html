@@ -48,7 +48,7 @@
         button:disabled { opacity: 0.5; cursor: not-allowed; }
         .btn-secondary { background: #64748b; }
         
-        input[type="text"], input[type="number"] {
+        input[type="text"], input[type="number"], input[type="email"], input[type="password"], select {
             padding: 8px;
             border: 1px solid var(--border);
             border-radius: 4px;
@@ -107,7 +107,11 @@
             padding: 10px 15px;
             border-radius: 8px;
             border: 1px solid var(--border);
+            flex-wrap: wrap;
+            gap: 10px;
         }
+
+        .top-bar { display: flex; justify-content: space-between; align-items: center; }
         
         #sync-status { font-weight: bold; }
         .sync-ok { color: #16a34a; }
@@ -153,69 +157,54 @@
 </head>
 <body>
 
-    <h1>Real-Time Condorcet Method</h1>
-    <button onclick="toggleIntro()" class="btn-secondary" style="margin: 5px 0 20px;">Show / Hide Introduction</button>
-
-    <div id="intro-section" class="hidden">
-        <h2>1. Introduction & Core Objective</h2>
-        <p>The purpose of this proposal is to design a direct democracy mechanism that functions as a continuous, massive assembly, moving past the traditional model of periodic mass elections.</p>
-        <p>In a conventional assembly, participants deliberate, introduce alternatives, and dynamically adjust their stances to resolve conflicts. The goal of this system is to replicate that exact flexible, deliberative dynamic on a large scale.</p>
-
-        <h2>2. The Mechanism</h2>
-        <p>To transform mass voting into a dynamic assembly, the system operates under three fundamental rules:</p>
-        <ul>
-            <li><strong>Real-Time Participation:</strong> Anyone can introduce a new proposal at any moment.</li>
-            <li><strong>Real-Time Voting:</strong> Voters can modify or update the ranking of their votes whenever they want.</li>
-            <li><strong>Real-Time Tallying:</strong> The system constantly processes votes and displays the current <a href="https://en.wikipedia.org/wiki/Condorcet_winner" target="_blank">Condorcet winner</a> (the option that defeats every other choice in head-to-head matchups), if one exits. If no such winner exists, the system could show the current winner or winners of a Condorcet completion method, such as the <a href="https://en.wikipedia.org/wiki/Copeland%27s_method" target="_blank">Copeland's method</a>.</li>
-        </ul>
-
-        <h2>3. Incentives and Conflict Resolution</h2>
-        <p>The core strength of this model is that by eliminating strategic voting (voting for the "lesser of two evils"), the community enters a constructive, self-correcting feedback loop.</p>
-        
-        <h3>3.1 Eliminating Polarization</h3>
-        <p>By using the Condorcet method, voters can rank options according to their true preferences, knowing their vote will never be wasted or accidentally benefit their least desired alternative.</p>
-        
-        <h3>3.2 The Rise of Consensus</h3>
-        <p>Because the process is live and transparent, the current state of the vote sends clear signals that prompt the community to improve existing proposals:</p>
-        <ul>
-            <li><strong>Stable Consensus (A clear winner exists):</strong> The community is satisfied with the leading option. No new proposals can beat it; the collective goal has been met.</li>
-            <li><strong>Unstable Winner (A winner exists, but causes dissatisfaction):</strong> A segment of the population feels unrepresented by the current leader. This incentivizes them to draft and introduce a superior proposal, specifically designed to capture a broader consensus and dethrone the leader.</li>
-            <li><strong>Tie/ Condorcet Paradox (No winner exists):</strong> This temporary deadlock reveals that there is a cycle in the collective preferences (e.g., A > B > C > A), meaning every tied option is defeated by something else. To break the tie, participants are incentivized to analyze the strengths of each tied option and draft a synthesized proposal that combines the best of all to achieve a clean majority.</li>
-        </ul>
+    <div class="top-bar">
+        <h1 data-i18n="app_title">Real-Time Condorcet Method</h1>
+        <!-- ==========================================
+        LANGUAGE SELECTOR (i18n)
+        SELECTOR DE IDIOMA (i18n)
+        NYELVVÁLASZTÓ (i18n)
+        ========================================== -->
+        <select id="lang-selector" onchange="changeLanguage(this.value)">
+            <option value="en">English</option>
+            <option value="es">Español</option>
+            <option value="hu">Magyar</option>
+        </select>
     </div>
+    
+    <button onclick="toggleIntro()" class="btn-secondary" style="margin: 5px 0 20px;" data-i18n="btn_toggle_intro">Show / Hide Introduction</button>
+
+    <div id="intro-section" class="hidden" data-i18n="intro_full_html"></div>
 
     <div class="header-meta">
         <div id="user-id-display"></div>
-        <div id="sync-indicator">Status: <span id="sync-status" class="sync-loading">Connecting to cloud...</span></div>
+        <div id="sync-indicator"><span data-i18n="status">Status: </span><span id="sync-status" class="sync-loading" data-i18n="status_connecting">Connecting to cloud...</span></div>
         <div id="auth-section">
-            <input type="email" id="email-input" placeholder="Email">
-            <input type="password" id="password-input" placeholder="Password">
-            <button onclick="signUp()">Sign Up</button>
-            <button onclick="signIn()">Login</button>
-            <button onclick="signOut()" id="logout-btn" class="hidden">Logout</button>
+            <input type="email" id="email-input" placeholder="Email" data-i18n="placeholder_email">
+            <input type="password" id="password-input" placeholder="Password" data-i18n="placeholder_password">
+            <button onclick="signUp()" data-i18n="btn_signup">Sign Up</button>
+            <button onclick="signIn()" data-i18n="btn_login">Login</button>
+            <button onclick="signOut()" id="logout-btn" class="hidden" data-i18n="btn_logout">Logout</button>
         </div>
     </div>
 
     <div id="view-discussions">
         <div class="card">
-            <h2>Open New Discussion</h2>
-            <textarea id="new-discussion-title" rows="2" style="width:100%; margin-bottom:10px;" placeholder="e.g., What would you change about this page?"></textarea>
-            <button onclick="createDiscussion(false)" id="btn-create-public">Create Public Discussion</button>
-            <button onclick="createDiscussion(true)"
-                    id="btn-create-private"
-                    style="margin-left:10px;">
+            <h2 data-i18n="h2_open_new">Open New Discussion</h2>
+            <textarea id="new-discussion-title" rows="2" style="width:100%; margin-bottom:10px;" placeholder="e.g., What would you change about this page?" data-i18n="placeholder_new_disc"></textarea>
+            <button onclick="createDiscussion(false)" id="btn-create-public" data-i18n="btn_create_pub">Create Public Discussion</button>
+            <button onclick="createDiscussion(true)" id="btn-create-private" style="margin-left:10px;" data-i18n="btn_create_priv">
                 Create Private Discussion
             </button>
         </div>
         
-        <h2>Active Discussions</h2>
+        <h2 data-i18n="h2_active_disc">Active Discussions</h2>
         <div id="discussions-list"></div>
     </div>
 
     <div id="view-discussion-detail" class="hidden">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <button onclick="goBack()" class="btn-secondary">&larr; Back to List</button>
-            <button onclick="forceSync()" class="btn-secondary">🔄 Refresh Data</button>
+            <button onclick="goBack()" class="btn-secondary" data-i18n="btn_back">&larr; Back to List</button>
+            <button onclick="forceSync()" class="btn-secondary" data-i18n="btn_refresh">🔄 Refresh Data</button>
         </div>
         
         <h2 id="discussion-title" style="margin-bottom: 20px;">Discussion Title</h2>
@@ -223,8 +212,8 @@
         <div class="grid-layout">
             <div>
                 <div class="card">
-                    <h3>Your Voting Ballot</h3>
-                    <p style="font-size: 0.85em; color: #64748b; margin-bottom: 15px;">
+                    <h3 data-i18n="h3_your_ballot">Your Voting Ballot</h3>
+                    <p style="font-size: 0.85em; color: #64748b; margin-bottom: 15px;" data-i18n="p_ballot_desc">
                         Assign numbers to rank your preferences (1 = favorite). <strong>You can repeat numbers to tie proposals.</strong>
                     </p>
                     
@@ -232,24 +221,24 @@
                     
                     <div class="default-rank-box">
                         <div>
-                            <strong style="font-size: 0.9em; color: #334155;">Default Rank</strong><br>
-                            <span style="font-size: 0.8em; color: #64748b;">Number assigned to blank or future options.</span>
+                            <strong style="font-size: 0.9em; color: #334155;" data-i18n="strong_default_rank">Default Rank</strong><br>
+                            <span style="font-size: 0.8em; color: #64748b;" data-i18n="span_default_rank">Number assigned to blank or future options.</span>
                         </div>
-                        <input type="number" min="1" id="default-rank-input" placeholder="Last">
+                        <input type="number" min="1" id="default-rank-input" placeholder="Last" data-i18n="placeholder_last">
                     </div>
 
-                    <button onclick="submitVote()" style="margin-top: 20px; width: 100%;" id="btn-vote">Save / Cast Vote</button>
+                    <button onclick="submitVote()" style="margin-top: 20px; width: 100%;" id="btn-vote" data-i18n="btn_save_vote">Save / Cast Vote</button>
                 </div>
 
                 <div class="card">
-                    <h3>Add New Proposal</h3>
-                    <textarea id="new-proposal-text" rows="2" style="width:100%; margin-bottom:10px;" placeholder="e.g., The colour of the table should be red when there is a tie, and yellow when there is a non-absolute winner"></textarea>
-                    <button onclick="addProposal()" id="btn-add">Add Proposal</button>
+                    <h3 data-i18n="h3_add_proposal">Add New Proposal</h3>
+                    <textarea id="new-proposal-text" rows="2" style="width:100%; margin-bottom:10px;" placeholder="e.g., The colour of the table should be red" data-i18n="placeholder_new_prop"></textarea>
+                    <button onclick="addProposal()" id="btn-add" data-i18n="btn_add_prop">Add Proposal</button>
                 </div>
             </div>
 
             <div class="card" style="margin-bottom: 0;">
-                <h3 style="margin-bottom: 15px;">Results and Consensus</h3>
+                <h3 style="margin-bottom: 15px;" data-i18n="h3_results">Results and Consensus</h3>
                 <div id="condorcet-status"></div>
                 <div id="leaderboard-section"></div>
             </div>
@@ -258,11 +247,87 @@
 
 <script>
     // ==========================================
-    // SUPABASE CONFIGURATION (Paste your credentials here!)
+    // TRANSLATION SYSTEM (i18n)
+    // ==========================================
+    let translations = {};
+    let currentLang = localStorage.getItem('condorcet_lang') || 'en';
+
+    function parseCSV(csvText) {
+        const lines = csvText.trim().split('\n');
+        const headers = lines[0].split(',');
+        const dict = {};
+        for(let i=1; i<lines.length; i++) {
+            let row = [];
+            let inQuotes = false;
+            let val = "";
+            for(let char of lines[i]) {
+                if(char === '"') inQuotes = !inQuotes;
+                else if(char === ',' && !inQuotes) { row.push(val); val = ""; }
+                else val += char;
+            }
+            row.push(val);
+            
+            const key = row[0].trim();
+            dict[key] = {};
+            for(let j=1; j<headers.length; j++) {
+                if (headers[j]) {
+                    dict[key][headers[j].trim()] = row[j] ? row[j].trim() : "";
+                }
+            }
+        }
+        return dict;
+    }
+
+    async function initTranslations() {
+        try {
+            const response = await fetch('translations.csv');
+            if (!response.ok) throw new Error('No se pudo cargar el archivo CSV');
+            
+            const csvContent = await response.text();
+            translations = parseCSV(csvContent);
+            
+            document.getElementById('lang-selector').value = currentLang;
+            applyTranslations();
+        } catch (error) {
+            console.error("Error al cargar traducciones:", error);
+        }
+    }
+
+    function t(key) {
+        return (translations[key] && translations[key][currentLang]) ? translations[key][currentLang] : key;
+    }
+
+    function changeLanguage(lang) {
+        currentLang = lang;
+        localStorage.setItem('condorcet_lang', lang);
+        applyTranslations();
+    }
+
+    function applyTranslations() {
+        // Update Static Tags
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+            const key = el.getAttribute('data-i18n');
+            const translatedText = t(key);
+            if(el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+                el.placeholder = translatedText;
+            } else {
+                el.innerHTML = translatedText;
+            }
+        });
+
+        // Update Dynamic UI state
+        updateUserDisplay();
+        renderDiscussions();
+        if (currentDiscussionId) {
+            renderDiscussionDetail();
+        }
+    }
+
+    // ==========================================
+    // SUPABASE CONFIGURATION
     // ==========================================
     const SUPABASE_URL = 'https://mrlracnknvhvxpgumkzn.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_0GKO2lN7KJb6PRioZkQoJg_RvokuU3z';
-    
     const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     // ==========================================
@@ -271,34 +336,27 @@
     let currentUser = null;
     let currentSession = null;
 
+    function updateUserDisplay() {
+        if (currentSession) {
+            document.getElementById('user-id-display').innerText = t('logged_in_as') + currentSession.user.email;
+        } else if (currentUser) {
+            document.getElementById('user-id-display').innerText = t('your_id') + currentUser;
+        }
+    }
+
     async function initializeUser() {
-
         const { data } = await supabaseClient.auth.getSession();
-
         if (data.session) {
-
             currentSession = data.session;
             currentUser = data.session.user.id;
-
-            document.getElementById('user-id-display').innerText =
-                "Logged in as: " + data.session.user.email;
-
             document.getElementById('logout-btn').classList.remove('hidden');
-
         } else {
-
             if (!localStorage.getItem('condorcet_user_id')) {
-                localStorage.setItem(
-                    'condorcet_user_id',
-                    'Voter_' + Math.random().toString(36).substr(2, 5)
-                );
+                localStorage.setItem('condorcet_user_id', 'Voter_' + Math.random().toString(36).substr(2, 5));
             }
-
             currentUser = localStorage.getItem('condorcet_user_id');
-
-            document.getElementById('user-id-display').innerText =
-                "Your ID: " + currentUser;
         }
+        updateUserDisplay();
     }
 
     let discussions = [];
@@ -312,131 +370,78 @@
     // ==========================================
     function setSyncStatus(status) {
         const el = document.getElementById('sync-status');
-        if(status === 'loading') { el.className = 'sync-loading'; el.innerText = 'Syncing...'; }
-        if(status === 'ok') { el.className = 'sync-ok'; el.innerText = 'Updated'; }
-        if(status === 'error') { el.className = 'sync-error'; el.innerText = 'Connection error'; }
+        if(status === 'loading') { el.className = 'sync-loading'; el.innerText = t('status_connecting'); }
+        if(status === 'ok') { el.className = 'sync-ok'; el.innerText = t('status_updated'); }
+        if(status === 'error') { el.className = 'sync-error'; el.innerText = t('status_error'); }
     }
 
     async function signUp() {
         const email = document.getElementById('email-input').value.trim();
         const password = document.getElementById('password-input').value;
-
-        const { error } = await supabaseClient.auth.signUp({
-            email,
-            password
-        });
-
-        if (error) {
-            alert(error.message);
-            return;
-        }
-
-        alert("Account created.");
+        const { error } = await supabaseClient.auth.signUp({ email, password });
+        if (error) return alert(error.message);
+        alert(t('alert_account_created'));
     }
 
     async function signIn() {
         const email = document.getElementById('email-input').value.trim();
         const password = document.getElementById('password-input').value;
-
         const localUserId = localStorage.getItem('condorcet_user_id');
 
-        const { data, error } = await supabaseClient.auth.signInWithPassword({
-            email,
-            password
-        });
-
-        if (error) {
-            alert(error.message);
-            return;
-        }
+        const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+        if (error) return alert(error.message);
 
         currentSession = data.session;
-
         await migrateAnonymousVotes(localUserId, data.user.id);
-
         currentUser = data.user.id;
-
-        document.getElementById('user-id-display').innerText =
-            "Logged in as: " + email;
-
+        
+        updateUserDisplay();
         document.getElementById('logout-btn').classList.remove('hidden');
     }
 
     async function signOut() {
         await supabaseClient.auth.signOut();
-
         currentSession = null;
-
         if (!localStorage.getItem('condorcet_user_id')) {
-            localStorage.setItem(
-                'condorcet_user_id',
-                'Voter_' + Math.random().toString(36).substr(2, 5)
-            );
+            localStorage.setItem('condorcet_user_id', 'Voter_' + Math.random().toString(36).substr(2, 5));
         }
-
         currentUser = localStorage.getItem('condorcet_user_id');
-
-        document.getElementById('user-id-display').innerText =
-            "Your ID: " + currentUser;
-
+        updateUserDisplay();
         document.getElementById('logout-btn').classList.add('hidden');
     }
 
     async function migrateAnonymousVotes(localUserId, authUserId) {
         await pullAndMergeData();
-
         discussions.forEach(disc => {
-
             if (!disc.ballots[localUserId]) return;
-
-            disc.ballots[authUserId] = structuredClone(
-                disc.ballots[localUserId]
-            );
-
+            disc.ballots[authUserId] = structuredClone(disc.ballots[localUserId]);
             delete disc.ballots[localUserId];
         });
-
-        localStorage.setItem(
-            'condorcet_data_en',
-            JSON.stringify(discussions)
-        );
-
-        localStorage.setItem(
-            'condorcet_user_id',
-            authUserId
-        );
-
+        localStorage.setItem('condorcet_data_en', JSON.stringify(discussions));
+        localStorage.setItem('condorcet_user_id', authUserId);
         await pushDataToCloud();
     }
 
     async function pullAndMergeData() {
         setSyncStatus('loading');
         try {
-            // Corregido a supabaseClient
             const { data, error } = await supabaseClient.from('assemblies').select('data').eq('id', 1).single();
-            
             if (error) throw error;
             if (data && data.data) {
                 const cloudDiscussions = data.data;
-                
-                // P2P MERGE LOGIC
                 cloudDiscussions.forEach(cloudDisc => {
                     let localDisc = discussions.find(d => d.id === cloudDisc.id);
                     if (!localDisc) {
                         discussions.push(cloudDisc);
                     } else {
-                        // Merge proposals
                         cloudDisc.proposals.forEach(cloudProp => {
                             if (!localDisc.proposals.find(p => p.id === cloudProp.id)) {
                                 localDisc.proposals.push(cloudProp);
                             }
                         });
-                        // Merge ballots
                         localDisc.ballots = { ...localDisc.ballots, ...cloudDisc.ballots };
                     }
                 });
-
-                // Save locally and refresh UI
                 localStorage.setItem('condorcet_data_en', JSON.stringify(discussions));
                 renderDiscussions();
                 if(currentDiscussionId) renderDiscussionDetail();
@@ -451,51 +456,32 @@
     async function pushDataToCloud() {
         setSyncStatus('loading');
         try {
-            // Download and merge first to avoid overwriting recent votes
             await pullAndMergeData(); 
-            
-            // Corregido a supabaseClient
             const { error } = await supabaseClient.from('assemblies').update({ data: discussions }).eq('id', 1);
             if (error) throw error;
-            
             setSyncStatus('ok');
         } catch (e) {
             console.error(e);
             setSyncStatus('error');
-            alert("Could not save to the cloud. Check your connection or Supabase configuration.");
+            alert(t('alert_sync_error'));
         }
     }
 
-    async function forceSync() {
-        await pullAndMergeData();
-    }
+    async function forceSync() { await pullAndMergeData(); }
 
     function openDiscussionFromUrl() {
-        const params = new URLSearchParams(
-            window.location.search
-        );
-
-        const discussionId =
-            params.get('discussion');
-
+        const params = new URLSearchParams(window.location.search);
+        const discussionId = params.get('discussion');
         if (!discussionId) return;
-
-        const discussion =
-            discussions.find(
-                d => d.id === discussionId
-            );
-
+        const discussion = discussions.find(d => d.id === discussionId);
         if (!discussion) return;
-
         currentDiscussionId = discussionId;
-
         renderDiscussionDetail();
-
         showView('view-discussion-detail');
     }
 
-    // Initialize sync on page load
     window.onload = async () => {
+        await initTranslations();
         await initializeUser();
         await pullAndMergeData();
         openDiscussionFromUrl();
@@ -527,36 +513,17 @@
     async function createDiscussion(isPrivate) {
         const titleInput = document.getElementById('new-discussion-title');
         const title = titleInput.value.trim();
-        if (!title) return alert("Enter a title.");
+        if (!title) return alert(t('alert_title'));
 
-        const discussionId =
-            'disc_' +
-            Math.random().toString(36).substring(2) +
-            Date.now();
-
-        discussions.push({
-            id: discussionId,
-            title,
-            proposals: [],
-            ballots: {},
-            isPrivate
-        });
+        const discussionId = 'disc_' + Math.random().toString(36).substring(2) + Date.now();
+        discussions.push({ id: discussionId, title, proposals: [], ballots: {}, isPrivate });
 
         if (isPrivate) {
-            const url =
-                location.origin +
-                location.pathname +
-                '?discussion=' +
-                discussionId;
-
-            prompt(
-                "Private discussion link:",
-                url
-            );
+            const url = location.origin + location.pathname + '?discussion=' + discussionId;
+            prompt(t('alert_link'), url);
         }
 
         titleInput.value = '';
-        
         localStorage.setItem('condorcet_data_en', JSON.stringify(discussions));
         renderDiscussions();
         await pushDataToCloud(); 
@@ -565,9 +532,8 @@
     function renderDiscussions() {
         const list = document.getElementById('discussions-list');
         list.innerHTML = '';
-        if(discussions.length === 0) return list.innerHTML = '<p style="color:#64748b;">No active discussions yet.</p>';
+        if(discussions.length === 0) return list.innerHTML = `<p style="color:#64748b;">${t('no_active_disc')}</p>`;
 
-        // Sort the discussions from highest to lowest number of votes
         let sortedDiscussions = discussions
             .filter(d => !d.isPrivate)
             .sort((a, b) => {
@@ -576,15 +542,14 @@
                 return votesB - votesA;
             });
 
-        // Render the sorted discussions
         sortedDiscussions.forEach(disc => {
             const votesCount = Object.keys(disc.ballots || {}).length;
             const div = document.createElement('div');
             div.className = 'card';
             div.innerHTML = `
                 <h3>${disc.title}</h3>
-                <p style="font-size:0.9em; color:#64748b;">Proposals: ${disc.proposals.length} | Votes cast: ${votesCount}</p>
-                <button onclick="openDiscussion('${disc.id}')">Enter Assembly</button>
+                <p style="font-size:0.9em; color:#64748b;">${t('proposals_count')} ${disc.proposals.length} | ${t('votes_cast')} ${votesCount}</p>
+                <button onclick="openDiscussion('${disc.id}')">${t('enter_assembly')}</button>
             `;
             list.appendChild(div);
         });
@@ -601,33 +566,25 @@
         const text = textInput.value.trim();
         if (!text) return;
 
-        // 1. Download cloud data first to avoid overwriting recent updates
         await pullAndMergeData(); 
 
-        // 2. Create the new proposal
         const disc = discussions.find(d => d.id === currentDiscussionId);
         const newPropId = 'prop_' + Date.now();
         disc.proposals.push({ id: newPropId, text: text });
 
-        // 3. Update the current user's ballot (assign an automatic rank 1)
         if (!disc.ballots[currentUser]) {
-            // If the user hasn't voted yet, create an empty ballot structure
             disc.ballots[currentUser] = { defaultRank: null, ranks: {} };
         } else if (disc.ballots[currentUser].ranks === undefined) {
-            // If it's a legacy format ballot, upgrade it smoothly
             const oldVotes = { ...disc.ballots[currentUser] };
             disc.ballots[currentUser] = { defaultRank: null, ranks: oldVotes };
         }
         
-        // Auto-assign rank 1 to the newly created option
         disc.ballots[currentUser].ranks[newPropId] = 1;
-
-        // 4. Clear input field and refresh UI
         textInput.value = '';
+        
         localStorage.setItem('condorcet_data_en', JSON.stringify(discussions));
         renderDiscussionDetail();
         
-        // 5. Push directly to the database
         setSyncStatus('loading');
         try {
             const { error } = await supabaseClient.from('assemblies').update({ data: discussions }).eq('id', 1);
@@ -636,12 +593,11 @@
         } catch (e) {
             console.error(e);
             setSyncStatus('error');
-            alert("Could not save to the cloud.");
+            alert(t('alert_sync_error'));
         }
     }
 
     async function submitVote() {
-        // 1. Read the inputs from the screen FIRST
         const inputs = document.querySelectorAll('.vote-input');
         let userVote = { defaultRank: null, ranks: {} };
         const defInputVal = document.getElementById('default-rank-input').value;
@@ -653,18 +609,13 @@
             userVote.ranks[propId] = rank === "" ? null : parseInt(rank);
         });
 
-        // 2. Download everyone else's latest data to avoid overwriting them
         await pullAndMergeData(); 
-
-        // 3. APPLY our newly read vote onto the freshly downloaded data
         const disc = discussions.find(d => d.id === currentDiscussionId);
         disc.ballots[currentUser] = userVote;
         
-        // 4. Save locally and re-render
         localStorage.setItem('condorcet_data_en', JSON.stringify(discussions));
         renderDiscussionDetail();
         
-        // 5. Push directly to the cloud bypassing the old push logic
         setSyncStatus('loading');
         try {
             const { error } = await supabaseClient.from('assemblies').update({ data: discussions }).eq('id', 1);
@@ -673,7 +624,7 @@
         } catch (e) {
             console.error(e);
             setSyncStatus('error');
-            alert("Could not save to the cloud.");
+            alert(t('alert_sync_error'));
         }
     }
 
@@ -691,7 +642,7 @@
 
         document.getElementById('default-rank-input').value = myDefault;
 
-        if(disc.proposals.length === 0) list.innerHTML = '<p style="color:#64748b;">No proposals yet.</p>';
+        if(disc.proposals.length === 0) list.innerHTML = `<p style="color:#64748b;">${t('no_proposals_yet')}</p>`;
 
         disc.proposals.forEach(prop => {
             const div = document.createElement('div');
@@ -715,11 +666,11 @@
         const leaderBoardDiv = document.getElementById('leaderboard-section');
         
         if (disc.proposals.length === 0) {
-            statusDiv.innerHTML = `<div class="status-banner status-paradox" style="margin:0;">Not enough proposals to compute.</div>`;
+            statusDiv.innerHTML = `<div class="status-banner status-paradox" style="margin:0;">${t('status_not_enough')}</div>`;
             return leaderBoardDiv.innerHTML = '';
         }
         if (Object.keys(disc.ballots).length === 0) {
-            statusDiv.innerHTML = `<div class="status-banner status-paradox" style="margin:0;">Waiting for the first vote...</div>`;
+            statusDiv.innerHTML = `<div class="status-banner status-paradox" style="margin:0;">${t('status_waiting')}</div>`;
             return leaderBoardDiv.innerHTML = '';
         }
 
@@ -743,7 +694,6 @@
                         r1 = (voteData[p1] !== null && voteData[p1] !== undefined) ? voteData[p1] : Infinity;
                         r2 = (voteData[p2] !== null && voteData[p2] !== undefined) ? voteData[p2] : Infinity;
                     }
-
                     if (r1 < r2) p1Score++; else if (r2 < r1) p2Score++;
                 });
 
@@ -762,12 +712,12 @@
         if (leaders.length === 1) {
             const winner = leaders[0];
             const isPureCondorcet = winsCount[winner.id] === n - 1;
-            statusDiv.innerHTML = `<div class="status-banner status-winner">🏆 ${isPureCondorcet ? 'Absolute Consensus' : 'Current Leader (Copeland)'}:<br><span style="font-size:1.1em;" class="preserve-lines">${winner.text}</span></div>`;
+            statusDiv.innerHTML = `<div class="status-banner status-winner">🏆 ${isPureCondorcet ? t('status_absolute') : t('status_leader')}:<br><span style="font-size:1.1em;" class="preserve-lines">${winner.text}</span></div>`;
         } else {
-            statusDiv.innerHTML = `<div class="status-banner status-paradox">⚠️ Technical Tie (${highestScore} pts). Add a synthesis proposal.</div>`;
+            statusDiv.innerHTML = `<div class="status-banner status-paradox">⚠️ ${t('status_paradox')} (${highestScore} ${t('pts')}).</div>`;
         }
 
-        let html = `<h4 style="margin-bottom: 10px; color: #334155;">1v1 Standings Table</h4>`;
+        let html = `<h4 style="margin-bottom: 10px; color: #334155;">${t('standings_table')}</h4>`;
         sortedProposals.forEach(p => {
             const pts = copelandPoints[p.id];
             html += `
@@ -775,8 +725,8 @@
                 <div class="leaderboard-header" onclick="toggleDetails('${p.id}')">
                     <div style="display:flex; align-items:center; width: 90%;">
                         <div class="badge-container">
-                            <span class="score-badge">${pts >= 0 ? '+' : ''}${pts} pts</span>
-                            <span class="win-badge">${winsCount[p.id]} Wins</span>
+                            <span class="score-badge">${pts >= 0 ? '+' : ''}${pts} ${t('pts')}</span>
+                            <span class="win-badge">${winsCount[p.id]} ${t('wins')}</span>
                         </div>
                         <span style="font-weight: 500;" class="preserve-lines">${p.text}</span>
                     </div>
@@ -784,21 +734,19 @@
                 </div>
                 <div id="details-${p.id}" class="matchup-details hidden">
                     <table class="matchup-table">
-                        <thead><tr><th>vs...</th><th>For</th><th>Against</th><th>Result</th></tr></thead>
+                        <thead><tr><th>vs...</th><th>${t('for')}</th><th>${t('against')}</th><th>${t('result')}</th></tr></thead>
                         <tbody>`;
-            if(n === 1) html += `<tr><td colspan="4">Add more proposals.</td></tr>`;
+            if(n === 1) html += `<tr><td colspan="4">${t('no_proposals_yet')}</td></tr>`;
             else proposals.forEach(op => {
                 if(op.id === p.id) return;
                 const m = matchups[p.id][op.id];
-                let res = m.myScore > m.theirScore ? '<td class="res-win">Won</td>' : (m.myScore < m.theirScore ? '<td class="res-loss">Lost</td>' : '<td class="res-tie">Tie</td>');
+                let res = m.myScore > m.theirScore ? `<td class="res-win">${t('res_won')}</td>` : (m.myScore < m.theirScore ? `<td class="res-loss">${t('res_lost')}</td>` : `<td class="res-tie">${t('res_tie')}</td>`);
                 html += `<tr><td>${op.text}</td><td>${m.myScore}</td><td>${m.theirScore}</td>${res}</tr>`;
             });
             html += `</tbody></table></div></div>`;
         });
         leaderBoardDiv.innerHTML = html;
     }
-
-    renderDiscussions();
 </script>
 </body>
 </html>
