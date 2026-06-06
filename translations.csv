@@ -52,3 +52,5 @@ status_paradox,Technical Tie,Empate Técnico,Technikai döntetlen
 alert_link,Private discussion link:,Enlace de la discusión privada:,Privát vita linkje:
 proposals_count,Proposals:,Propuestas:,Javaslatok:
 votes_cast,Votes cast:,Votos emitidos:,Leadott szavazatok:
+toggle_simplified_mode,Simplified ballot,Papeleta simplificada,Egyszerűsített szavazólap
+p_ballot_desc_simplified,Check <b>Support</b> (👍) or <b>Reject</b> (👎) for each proposal. Leave unchecked to remain <b>Neutral</b>.,Marca <b>A favor</b> (👍) o <b>En contra</b> (👎) para cada propuesta. Déjalo en blanco para permanecer <b>Neutral</b>.,Jelölje be a <b>Támogatom</b> (👍) vagy <b>Elutasítom</b> (👎) gombot minden javaslathoz. Hagyja üresen a <b>Semleges</b> maradáshoz.
