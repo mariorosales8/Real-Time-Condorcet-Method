@@ -63,6 +63,8 @@
             align-items: center;
             padding: 12px 10px;
             border-bottom: 1px solid var(--border);
+            flex-wrap: wrap;
+            gap: 10px;
         }
 
         .proposal-item span, h2, h3 {
@@ -154,19 +156,71 @@
         .res-loss { color: #991b1b; background: #fee2e2; }
         .res-tie { color: #64748b; background: #f1f5f9; }
         
-        /* Simplified mode styles */
+        /* Modificaciones UI Boleta Simplificada */
         .simplified-vote-options {
             display: flex;
-            gap: 15px;
+            gap: 10px;
             align-items: center;
+            flex-wrap: wrap;
         }
-        .simplified-vote-options label {
+        .vote-label-text {
+            font-size: 0.8em;
+            color: #64748b;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .vote-scale-group {
+            display: flex;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            overflow: hidden;
+            background: white;
+        }
+        .sim-vote-lbl {
             cursor: pointer;
             display: flex;
-            align-items: center;
-            gap: 5px;
-            font-size: 0.9em;
+            margin: 0 !important;
         }
+        .sim-vote-lbl input {
+            display: none;
+        }
+        .sim-vote-lbl span {
+            padding: 6px 12px;
+            font-size: 0.85em;
+            font-weight: 500;
+            color: #475569;
+            transition: all 0.2s;
+            border-right: 1px solid var(--border);
+        }
+        .sim-vote-lbl:last-child span {
+            border-right: none;
+        }
+        .sim-vote-lbl:hover span {
+            background: #f1f5f9;
+        }
+        /* Estado activo "A favor" (Verde) */
+        .vote-scale-group .sim-vote-lbl input:checked + span {
+            background: #22c55e;
+            color: white;
+            border-color: #22c55e;
+        }
+        /* Botón "En contra" independiente */
+        .reject-lbl {
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        .reject-lbl span {
+            border: none;
+            background: white;
+        }
+        .reject-lbl input:checked + span {
+            background: #ef4444;
+            color: white;
+            border-color: #ef4444;
+        }
+
         .mode-toggle-container {
             background: #f1f5f9;
             padding: 10px 15px;
@@ -549,22 +603,18 @@
         document.getElementById('details-' + propId).classList.toggle('hidden');
     }
 
-    // Switches between Simplified and Complete mode, and saves state to localStorage
     function toggleVotingMode() {
         isSimplifiedMode = document.getElementById('mode-toggle').checked;
         localStorage.setItem('condorcet_voting_mode', isSimplifiedMode);
         renderDiscussionDetail();
     }
 
-    // Ensures mutually exclusive checkboxes in Simplified Mode
-    function handleSimplifiedVote(checkbox, type) {
+    function handleSimplifiedVote(checkbox) {
         if (checkbox.checked) {
             const container = checkbox.closest('.simplified-vote-options');
-            if (type === 'support') {
-                container.querySelector('.vote-reject').checked = false;
-            } else if (type === 'reject') {
-                container.querySelector('.vote-support').checked = false;
-            }
+            container.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+                if (cb !== checkbox) cb.checked = false;
+            });
         }
     }
 
@@ -637,7 +687,6 @@
             disc.ballots[currentUser] = { defaultRank: null, ranks: oldVotes };
         }
         
-        // When adding a proposal in simplified mode, it initializes as Rank 1 (Support) by default
         disc.ballots[currentUser].ranks[newPropId] = 1;
         textInput.value = '';
         
@@ -660,20 +709,18 @@
         let userVote = { defaultRank: null, ranks: {} };
 
         if (isSimplifiedMode) {
-            userVote.defaultRank = 2; // Skipped options are treated as Neutral
+            userVote.defaultRank = 6; 
             const proposalItems = document.querySelectorAll('.proposal-item');
             
             proposalItems.forEach(item => {
-                const supportCb = item.querySelector('.vote-support');
-                const rejectCb = item.querySelector('.vote-reject');
                 const propId = item.getAttribute('data-id');
+                const checkedBox = item.querySelector('.simplified-vote-options input:checked');
                 
-                if (supportCb && supportCb.checked) {
-                    userVote.ranks[propId] = 1; // Support = Rank 1
-                } else if (rejectCb && rejectCb.checked) {
-                    userVote.ranks[propId] = 3; // Reject = Rank 3
+                if (checkedBox) {
+                    // Guarda el valor interno correcto en la estructura de datos (1 = Favorito, 7 = En Contra)
+                    userVote.ranks[propId] = parseInt(checkedBox.value);
                 } else {
-                    userVote.ranks[propId] = 2; // Neutral = Rank 2
+                    userVote.ranks[propId] = 6; 
                 }
             });
         } else {
@@ -712,10 +759,8 @@
         if(!disc) return;
         document.getElementById('discussion-title').innerText = disc.title;
 
-        // Ensure the mode toggle checkbox reflects the current state accurately
         document.getElementById('mode-toggle').checked = isSimplifiedMode;
 
-        // Update Description and Default Rank box visibility depending on Mode
         const ballotDesc = document.getElementById('ballot-desc');
         const defaultRankContainer = document.getElementById('default-rank-container');
         
@@ -741,22 +786,44 @@
         disc.proposals.forEach(prop => {
             const div = document.createElement('div');
             div.className = 'proposal-item';
-            div.setAttribute('data-id', prop.id); // Save prop.id inside the parent container element
+            div.setAttribute('data-id', prop.id); 
             const prevRank = myRanks[prop.id] !== undefined && myRanks[prop.id] !== null ? myRanks[prop.id] : '';
             
             let inputUI = '';
             if (isSimplifiedMode) {
-                // Rank to checkbox translation: 1 = Support, 3 = Reject, 2 or null = Neutral
-                const isSupportChecked = (prevRank === 1) ? 'checked' : '';
-                const isRejectChecked = (prevRank === 3) ? 'checked' : '';
+                // Desacoplar UI (1 al 5) de Internal Rank (5 al 1).
+                // UI 5 (A lot) -> Internal 1
+                // UI 1 (A bit) -> Internal 5
+                const scaleValues = [
+                    { ui: 1, internal: 5 },
+                    { ui: 2, internal: 4 },
+                    { ui: 3, internal: 3 },
+                    { ui: 4, internal: 2 },
+                    { ui: 5, internal: 1 }
+                ];
+
+                let scaleHtml = scaleValues.map(item => {
+                    // Verificamos si el rango interno guardado corresponde a este botón
+                    const isChecked = (prevRank === item.internal) ? 'checked' : '';
+                    return `
+                        <label class="sim-vote-lbl" title="Support Level: ${item.ui}">
+                            <input type="checkbox" value="${item.internal}" ${isChecked} onchange="handleSimplifiedVote(this)">
+                            <span>${item.ui}</span>
+                        </label>
+                    `;
+                }).join('');
+
+                const isRejectChecked = (prevRank === 7) ? 'checked' : '';
                 
                 inputUI = `
                     <div class="simplified-vote-options">
-                        <label>
-                            <input type="checkbox" class="vote-support" ${isSupportChecked} onchange="handleSimplifiedVote(this, 'support')"> 👍
-                        </label>
-                        <label>
-                            <input type="checkbox" class="vote-reject" ${isRejectChecked} onchange="handleSimplifiedVote(this, 'reject')"> 👎
+                        <span class="vote-label-text">${t('lbl_support')}:</span>
+                        <div class="vote-scale-group">
+                            ${scaleHtml}
+                        </div>
+                        <label class="sim-vote-lbl reject-lbl" title="Ranking 7">
+                            <input type="checkbox" value="7" ${isRejectChecked} onchange="handleSimplifiedVote(this)">
+                            <span>${t('lbl_oppose')}</span>
                         </label>
                     </div>
                 `;
@@ -765,7 +832,7 @@
             }
 
             div.innerHTML = `
-                <span style="font-weight: 500;">${prop.text}</span>
+                <span style="font-weight: 500; flex: 1; min-width: 200px;">${prop.text}</span>
                 ${inputUI}
             `;
             list.appendChild(div);

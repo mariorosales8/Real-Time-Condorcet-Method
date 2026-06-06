@@ -53,4 +53,6 @@ alert_link,Private discussion link:,Enlace de la discusión privada:,Privát vit
 proposals_count,Proposals:,Propuestas:,Javaslatok:
 votes_cast,Votes cast:,Votos emitidos:,Leadott szavazatok:
 toggle_simplified_mode,Simplified ballot,Papeleta simplificada,Egyszerűsített szavazólap
-p_ballot_desc_simplified,Check <b>Support</b> (👍) or <b>Reject</b> (👎) for each proposal. Leave unchecked to remain <b>Neutral</b>.,Marca <b>A favor</b> (👍) o <b>En contra</b> (👎) para cada propuesta. Déjalo en blanco para permanecer <b>Neutral</b>.,Jelölje be a <b>Támogatom</b> (👍) vagy <b>Elutasítom</b> (👎) gombot minden javaslathoz. Hagyja üresen a <b>Semleges</b> maradáshoz.
+p_ballot_desc_simplified,"Select your level of support (1 = a bit, 5 = a lot) or oppose the proposal. Unanswered items are counted as neutral.","Selecciona tu nivel de apoyo (1 = poco, 5 = mucho) o rechaza la propuesta. Las opciones sin respuesta se consideran neutrales.","Válassza ki a támogatás szintjét (1 = kicsit, 5 = nagyon) vagy utasítsa el a javaslatot. A megválaszolatlan elemek semlegesnek számítanak."
+lbl_support,"I support (1 = a bit, 5 = a lot)","A favor (1 = poco, 5 = mucho)","Támogatom (1 = kicsit, 5 = nagyon)"
+lbl_oppose,👎 I oppose,👎 En contra,👎 Ellenzem
