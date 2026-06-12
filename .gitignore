@@ -1,0 +1,5 @@
+.aider*
+supabase/.branches/
+supabase/.temp/
+target
+node_modules
