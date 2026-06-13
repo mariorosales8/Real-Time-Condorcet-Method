@@ -312,7 +312,7 @@ window.handleSimplifiedVote = function (checkbox) {
 };
 
 function showCopyFeedback(message, url) {
-  const text = `${message}\n${url}`;
+  const text = `${message}`;
   try {
     if (typeof window.prompt === 'function') {
       window.prompt(text, url);
