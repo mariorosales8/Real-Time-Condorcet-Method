@@ -316,6 +316,13 @@ window.handleSimplifiedVote = function (checkbox) {
   }
 };
 
+window.copyLink = function (id) {
+  const url = location.origin + location.pathname + '?discussion=' + id;
+  navigator.clipboard.writeText(url).then(() => {
+    alert(t('link_copied'));
+  });
+};
+
 window.openDiscussion = function (id) {
   currentDiscussionId = id;
   renderDiscussionDetail();
@@ -333,9 +340,7 @@ window.createDiscussion = async function (isPrivate) {
   const discussionId = createDiscussion(discussions, title, isPrivate);
 
   if (isPrivate) {
-    const url =
-      location.origin + location.pathname + '?discussion=' + discussionId;
-    prompt(t('alert_link'), url);
+    copyLink(discussionId);
   }
 
   titleInput.value = '';
@@ -364,12 +369,16 @@ function renderDiscussions() {
     const votesCount = Object.keys(disc.ballots || {}).length;
     const div = document.createElement('div');
     div.className = 'card';
+    const linkUrl = location.origin + location.pathname + '?discussion=' + disc.id;
     div.innerHTML =
       `<h3>${disc.title}</h3>` +
       `<p style="font-size:0.9em;color:#64748b;">` +
       `${t('proposals_count')} ${disc.proposals.length} | ` +
       `${t('votes_cast')} ${votesCount}</p>` +
-      `<button onclick="openDiscussion('${disc.id}')">${t('enter_assembly')}</button>`;
+      `<div style="display:flex;gap:8px;">` +
+      `<button onclick="openDiscussion('${disc.id}')">${t('enter_assembly')}</button>` +
+      `<button class="btn-secondary" onclick="copyLink('${disc.id}')">${t('btn_copy_link')}</button>` +
+      `</div>`;
     list.appendChild(div);
   });
 }

@@ -272,9 +272,12 @@
     </div>
 
     <div id="view-discussion-detail" class="hidden">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 8px;">
             <button onclick="goBack()" class="btn-secondary" data-i18n="btn_back">&larr; Back to List</button>
-            <button onclick="forceSync()" class="btn-secondary" data-i18n="btn_refresh">🔄 Refresh Data</button>
+            <div style="display: flex; gap: 8px;">
+                <button onclick="copyLink(currentDiscussionId)" class="btn-secondary" data-i18n="btn_copy_link">Copy Link</button>
+                <button onclick="forceSync()" class="btn-secondary" data-i18n="btn_refresh">🔄 Refresh Data</button>
+            </div>
         </div>
         
         <h2 id="discussion-title" style="margin-bottom: 20px;">Discussion Title</h2>
