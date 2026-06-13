@@ -51,7 +51,7 @@ status_leader,Current Leader (Copeland),Líder Actual (Copeland),Jelenlegi vezet
 status_paradox,Technical Tie,Empate Técnico,Technikai döntetlen
 btn_copy_link,Copy Link,Copiar Enlace,Link másolása
 link_copied,Link copied to clipboard!,¡Enlace copiado al portapapeles!,Link a vágólapra másolva!
-alert_link,Private discussion link:,Enlace de la discusión privada:,Privát vita linkje:
+alert_link,Discussion link:,Enlace de la discusión:, Vita linkje:
 proposals_count,Proposals:,Propuestas:,Javaslatok:
 votes_cast,Votes cast:,Votos emitidos:,Leadott szavazatok:
 toggle_simplified_mode,Simplified ballot,Papeleta simplificada,Egyszerűsített szavazólap

@@ -331,10 +331,11 @@ window.handleSimplifiedVote = function (checkbox) {
 window.copyLink = function (id) {
   if (!id) id = currentDiscussionId;
   const url = location.origin + location.pathname + '?discussion=' + id;
-  prompt(t('alert_link'), url);
   navigator.clipboard.writeText(url).then(() => {
-    alert(t('link_copied'));
-  }).catch(() => {});
+    prompt(t('link_copied'), url);
+  }).catch(() => {
+    prompt(t('alert_link'), url);
+  });
 };
 
 window.openDiscussion = function (id) {
