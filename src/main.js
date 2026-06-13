@@ -45,18 +45,6 @@ let translations = {};
 let currentLang = loadLang(localStorage);
 let t = (key) => key; // placeholder, replaced once CSV is loaded
 
-async function loadIntro(lang) {
-  try {
-    const response = await fetch(`intro_${lang}.html`);
-    if (response.ok) {
-      document.getElementById('intro-section').innerHTML =
-        await response.text();
-    }
-  } catch (error) {
-    console.error('Error loading introduction:', error);
-  }
-}
-
 async function initTranslations() {
   try {
     const response = await fetch('translations.csv');
@@ -282,7 +270,6 @@ function openDiscussionFromUrl() {
 
 window.onload = async () => {
   await initTranslations();
-  loadIntro(currentLang);
   await initializeUser();
   await pullAndMergeData();
   openDiscussionFromUrl();
@@ -301,10 +288,6 @@ window.goBack = function () {
   currentDiscussionId = null;
   renderDiscussions();
   showView('view-discussions');
-};
-
-window.toggleIntro = function () {
-  document.getElementById('intro-section').classList.toggle('hidden');
 };
 
 window.toggleDetails = function (propId) {

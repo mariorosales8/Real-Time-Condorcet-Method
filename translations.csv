@@ -1,6 +1,5 @@
 key,en,es,hu
 app_title,Real-Time Condorcet Method,Método de Condorcet en Tiempo Real,Valós idejű Condorcet-módszer
-btn_toggle_intro,Show / Hide Introduction,Mostrar / Ocultar Introducción,Bevezető megjelenítése / elrejtése
 status,Status: ,Estado: ,Állapot: 
 status_connecting,Connecting to cloud...,Conectando a la nube...,Csatlakozás a felhőhöz...
 status_updated,Updated,Actualizado,Frissítve
