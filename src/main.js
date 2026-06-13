@@ -328,13 +328,26 @@ window.handleSimplifiedVote = function (checkbox) {
   }
 };
 
+function showCopyFeedback(message, url) {
+  const text = `${message}\n${url}`;
+  try {
+    if (typeof window.prompt === 'function') {
+      window.prompt(text, url);
+      return;
+    }
+  } catch (error) {
+    console.warn('Prompt fallback unavailable:', error);
+  }
+  window.alert(text);
+}
+
 window.copyLink = function (id) {
   if (!id) id = currentDiscussionId;
   const url = location.origin + location.pathname + '?discussion=' + id;
   navigator.clipboard.writeText(url).then(() => {
-    prompt(t('link_copied'), url);
+    showCopyFeedback(t('link_copied'), url);
   }).catch(() => {
-    prompt(t('alert_link'), url);
+    showCopyFeedback(t('alert_link'), url);
   });
 };
 
