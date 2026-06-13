@@ -27,6 +27,18 @@ import {
 } from './store.js';
 
 // ==========================================
+// HELPERS
+// ==========================================
+function escapeHtml(str) {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+// ==========================================
 // TRANSLATIONS STATE
 // ==========================================
 let translations = {};
@@ -320,6 +332,8 @@ window.copyLink = function (id) {
   const url = location.origin + location.pathname + '?discussion=' + id;
   navigator.clipboard.writeText(url).then(() => {
     alert(t('link_copied'));
+  }).catch(() => {
+    prompt(t('alert_link'), url);
   });
 };
 
@@ -371,7 +385,7 @@ function renderDiscussions() {
     div.className = 'card';
     const linkUrl = location.origin + location.pathname + '?discussion=' + disc.id;
     div.innerHTML =
-      `<h3>${disc.title}</h3>` +
+      `<h3>${escapeHtml(disc.title)}</h3>` +
       `<p style="font-size:0.9em;color:#64748b;">` +
       `${t('proposals_count')} ${disc.proposals.length} | ` +
       `${t('votes_cast')} ${votesCount}</p>` +
@@ -539,7 +553,7 @@ function renderDiscussionDetail() {
     }
 
     div.innerHTML =
-      `<span style="font-weight:500;flex:1;min-width:200px;">${prop.text}</span>${inputUI}`;
+      `<span style="font-weight:500;flex:1;min-width:200px;">${escapeHtml(prop.text)}</span>${inputUI}`;
     list.appendChild(div);
   });
 
@@ -573,7 +587,7 @@ function renderCondorcetResults(disc) {
     const key = isPureCondorcet ? 'status_absolute' : 'status_leader';
     statusDiv.innerHTML =
       `<div class="status-banner status-winner">🏆 ${t(key)}:<br>` +
-      `<span style="font-size:1.1em;" class="preserve-lines">${winner.text}</span></div>`;
+      `<span style="font-size:1.1em;" class="preserve-lines">${escapeHtml(winner.text)}</span></div>`;
   } else {
     statusDiv.innerHTML =
       `<div class="status-banner status-paradox">⚠️ ${t('status_paradox')} (${highestScore} ${t('pts')}).</div>`;
@@ -589,7 +603,7 @@ function renderCondorcetResults(disc) {
       `<div class="badge-container">` +
       `<span class="score-badge">${pts >= 0 ? '+' : ''}${pts} ${t('pts')}</span>` +
       `<span class="win-badge">${winsCount[p.id]} ${t('wins')}</span>` +
-      `</div><span style="font-weight:500;" class="preserve-lines">${p.text}</span>` +
+      `</div><span style="font-weight:500;" class="preserve-lines">${escapeHtml(p.text)}</span>` +
       `</div><span style="color:#94a3b8;font-size:0.8em;">▼</span></div>` +
       `<div id="details-${p.id}" class="matchup-details hidden">` +
       `<table class="matchup-table"><thead><tr>` +
@@ -614,7 +628,7 @@ function renderCondorcetResults(disc) {
           resText = t('res_tie');
         }
         html +=
-          `<tr><td>${op.text}</td><td>${m.myScore}</td>` +
+          `<tr><td>${escapeHtml(op.text)}</td><td>${m.myScore}</td>` +
           `<td>${m.theirScore}</td><td class="${resClass}">${resText}</td></tr>`;
       });
     }
