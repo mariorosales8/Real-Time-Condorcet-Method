@@ -329,6 +329,7 @@ window.handleSimplifiedVote = function (checkbox) {
 };
 
 window.copyLink = function (id) {
+  if (!id) id = currentDiscussionId;
   const url = location.origin + location.pathname + '?discussion=' + id;
   navigator.clipboard.writeText(url).then(() => {
     alert(t('link_copied'));
